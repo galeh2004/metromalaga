@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8" />
+    <!-- Titular del mapa -->
+    <title>Restos arqueológicos encontrados en la construcción del metro</title>
+    <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
+    <!-- Script y estilos de MapLibre-->
+    <script src="https://unpkg.com/maplibre-gl@4.1.2/dist/maplibre-gl.js"></script>
+    <link href="https://unpkg.com/maplibre-gl@4.1.2/dist/maplibre-gl.css" rel="stylesheet" />
+    <!-- Estilos básicos de la página-->
+    <style>
+        body { margin: 0; padding: 0; }
+        #map { position: absolute; top: 0; bottom: 0; width: 100%; } 
+        
+         /* Titulito de los tooltips */
+         h3 {
+            line-height: 1.2em;
+            font-size: 1.4em;
+            margin: 0px 0px 4px 0px;
+        }
+        /* Texto normal de los tooltips */
+        p {
+            line-height: 1.4em;
+            margin: 2px 0px 0px 0px;
+        }
+        /* Texto normal de la leyenda */
+        div p {
+            color: black;
+            font-size: 14px;
+        }
+
+        .map-overlay {
+            position: absolute;
+            /* Ubicación: si quieres arriba, a la izquierda, tendrás que cambiar bottom por top y right por left */
+            top: 0;
+            left: 0;
+            /* Color de fondo de la leyenda */
+            background: rgba(255, 255, 255, 0.8);
+            /* Espacio reservado con respecto al límite de pantalla */
+            margin-right: 20px;
+            /* Fuente tipográfica */
+            font-family: Arial, sans-serif;
+            overflow: auto;
+            /* Borde de la caja de la leyenda */
+            border-radius: 0px;
+        }
+        /* Estilos propios del contenido de la leyenda */
+/*
+        #legend {
+            padding: 10px;
+            line-height: 18px;
+            height: 54px;
+            margin-top: 10px;
+            margin-left: 10px;
+            width: 100px;
+            overflow: hidden;
+            background-color: #ffffff;
+            color: #202020;
+            font-size: 13px;
+            border-radius: 4px;
+
+        }
+
+        */
+        /* Referencias (puntitos, cuadritos de colores) de la leyenda */
+        .legend-key {
+            display: inline-block;
+            border-radius: 0%;
+            width: 10px;
+            height: 10px;
+            margin-right: 10px;
+            opacity: 1;
+        }
+        .maplibregl-popup-content {
+    width: 300px;
+}
+
+
+    </style>
+
+</head>
+<body>
+    <!-- Carga del geocoder de MapLibre -->
+    <script src="https://unpkg.com/@maplibre/maplibre-gl-geocoder@1.5.0/dist/maplibre-gl-geocoder.min.js"></script>
+    <link
+    rel="stylesheet"
+    href="https://unpkg.com/@maplibre/maplibre-gl-geocoder@1.5.0/dist/maplibre-gl-geocoder.css"
+    />
+
+    <!-- Contenedor del mapa-->
+    <div id='map'></div>
+        <div class='map-overlay' id='legend'></div>
+
+    <!-- Java Script de MapLibre-->
+    <script>
+        const map = new maplibregl.Map({
+        // Aquí pegar el Raw Alejandro del ESTILO de mi mapa
+          style: 'https://raw.githubusercontent.com/encarnihinojosa/mapstyles/refs/heads/main/positron_light.json',
+          center: [-4.4360840738650955, 36.71303986382696],
+          zoom: 13.3,
+          container: 'map',
+        });
+    
+map.on('load', () => {
+
+map.addSource('metrolinea1', {
+// es de tipo geojson
+'type': 'geojson',
+// Aquí pegar el Raw Alejandro de los DATOS de mi mapa
+'data': 'https://raw.githubusercontent.com/galeh2004/metromalaga/refs/heads/main/map%20(2).geojson'
+});
+
+map.addLayer({
+    'id': 'metro1_layer',
+    'type': 'line',
+    'source': 'metrolinea1',
+    'paint': {
+        'line-color': '#E2001A50',
+        'line-width': 5
+    }
+});
+
+map.addSource('metrolinea2', {
+// es de tipo geojson
+'type': 'geojson',
+// Aquí pegar el Raw Alejandro de los DATOS de mi mapa
+'data': 'https://raw.githubusercontent.com/galeh2004/metromalaga/refs/heads/main/map%20(1).geojson'
+});
+
+map.addLayer({
+    'id': 'metro2_layer',
+    'type': 'line',
+    'source': 'metrolinea2',
+    'paint': {
+        'line-color': '#0072BA50',
+        'line-width': 5
+    }
+});
+
+map.addSource('puntos', {
+// es de tipo geojson
+'type': 'geojson',
+// Aquí pegar el Raw Alejandro de los DATOS de mi mapa
+'data': 'https://raw.githubusercontent.com/galeh2004/metromalaga/refs/heads/main/malagasubterraneafinal%20(1).json'
+});
+
+map.addLayer({
+    'id': 'puntos_layer',
+    'type': 'circle',
+    'source': 'puntos',
+    'paint': {
+        'circle-radius': 6,
+        'circle-color': '#202020',
+        'circle-stroke-color': '#ffffff',
+        'circle-stroke-width': 8,
+        'circle-stroke-opacity': 0
+    }
+});
+
+});
+
+
+
+
+let popup; // Variable para almacenar la referencia al popup
+
+map.on('mousemove', 'puntos_layer', (e) => {
+    // Crea un nuevo popup si no existe
+    if (!popup) {
+        popup = new maplibregl.Popup({ 
+            offset: [0, -20],
+            closeButton: false,
+            closeOnClick: false
+        });
+    }
+    
+
+popup
+  .setLngLat(e.lngLat)
+  .setHTML(`
+  <p><b>${e.features[0].properties.descubrimiento}</b></p>
+  <p style="color:grey;">${e.features[0].properties.fecha}</p>
+            <p>${e.features[0].properties.name}</p>
+  `)
+  .addTo(map);
+
+map.getCanvas().style.cursor = 'pointer';
+});
+
+
+
+// Cambiar el cursor a normal y eliminar el popup cuando el mouse sale del polígono
+map.on('mouseleave', 'puntos_layer', () => {
+    map.getCanvas().style.cursor = '';
+    if (popup) {
+        popup.remove(); // Elimina el popup del mapa
+        popup = null;   // Restablece la referencia
+    }
+});
+/*
+// LEYENDA
+var layers = ['<b>Hallazgos</b>','Metro: línea 1', 'Metro: línea 2'];
+    var colors = ['#202020', '#E2001A50', '#0072BA50'];
+    for (i = 0; i < layers.length; i++) {
+  var layer = layers[i];
+  var color = colors[i];
+  var item = document.createElement('div');
+  var key = document.createElement('span');
+  key.className = 'legend-key';
+  key.style.backgroundColor = color;
+  key.style.opacity = 1;
+
+  var value = document.createElement('span');
+  value.innerHTML = layer;
+  item.appendChild(key);
+  item.appendChild(value);
+  legend.appendChild(item);
+}
+
+//
+        
+
+        const geocoderApi = {
+        forwardGeocode: async (config) => {
+            const features = [];
+            try {
+                const bbox = [-5.26, 36.23, -3.75, 37.27];
+                const request =
+            `https://nominatim.openstreetmap.org/search?q=${
+                config.query
+            }&format=geojson&polygon_geojson=1&addressdetails=1&viewbox=${
+                    bbox[0]
+                },${bbox[1]},${bbox[2]},${bbox[3]}&bounded=1`;
+                const response = await fetch(request);
+                const geojson = await response.json();
+                for (const feature of geojson.features) {
+                    const center = [
+                        feature.bbox[0] +
+                    (feature.bbox[2] - feature.bbox[0]) / 2,
+                        feature.bbox[1] +
+                    (feature.bbox[3] - feature.bbox[1]) / 2
+                    ];
+                    const point = {
+                        type: 'Feature',
+                        geometry: {
+                            type: 'Point',
+                            coordinates: center
+                        },
+                        place_name: feature.properties.display_name,
+                        properties: feature.properties,
+                        text: feature.properties.display_name,
+                        place_type: ['place'],
+                        center
+                    };
+                    features.push(point);
+                }
+            } catch (e) {
+                console.error(`Failed to forwardGeocode with error: ${e}`);
+            }
+
+            return {
+                features
+            };
+        }
+    };
+
+/*
+    map.addControl(
+        new MaplibreGeocoder(geocoderApi, {
+            maplibregl, placeholder: 'Busca una calle'
+        }), 'top-left'
+    );
+*/
+    
+    </script>
+</body>
+</html>
